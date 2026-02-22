@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pro Coach Master - CD Estudiantil</title>
+<title>Master Coach - CD Estudiantil</title>
 
 <style>
 :root{
@@ -16,34 +16,40 @@
 body{background:var(--bg);color:var(--text);padding:20px; padding-bottom: 120px;}
 
 header{text-align:center;margin-bottom:20px;}
-.config-row{display:flex; justify-content: center; gap:10px; margin-bottom: 20px;}
+.config-row{display:flex; justify-content: center; gap:10px; margin-bottom: 20px; flex-wrap: wrap;}
 
-/* --- PANEL DE CONTROL FLOTANTE --- */
+/* --- GESTIÓN DE SEMANAS (EDITABLES) --- */
+.week-manager { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: thin; }
+.week-btn { 
+    background: var(--card-soft); color: var(--text); border: 1px solid var(--border); 
+    padding: 8px 12px; border-radius: 12px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 5px;
+    transition: 0.2s;
+}
+.week-btn.active { border-color: var(--accent2); background: rgba(59, 130, 246, 0.1); box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
+
+.edit-week-input { 
+    background: transparent; border: none; color: var(--sub); font-weight: 600; 
+    width: 90px; text-align: center; cursor: text; font-size: 13px;
+}
+.week-btn.active .edit-week-input { color: var(--accent2); }
+.edit-week-input:focus { outline: none; border-bottom: 1px solid var(--accent2); color: white; }
+
+/* --- PANEL FLOTANTE --- */
 #control-panel {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     background: var(--card); border: 2px solid var(--accent2);
-    padding: 10px 20px; border-radius: 50px; z-index: 1000;
+    padding: 10px 18px; border-radius: 50px; z-index: 1000;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    display: flex; align-items: center; gap: 15px; width: max-content;
+    display: flex; align-items: center; gap: 12px; width: max-content;
 }
 #timer-display { font-family: monospace; font-size: 18px; font-weight: bold; color: var(--accent2); }
 .btn-round { background: var(--card-soft); border: 1px solid var(--border); color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold;}
 
-/* Estilo específico para el marcador */
 .live-score-container {
     display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3);
-    padding: 5px 15px; border-radius: 30px; border: 1px solid var(--border);
+    padding: 5px 12px; border-radius: 30px; border: 1px solid var(--border);
 }
-.score-val { font-size: 20px; font-weight: bold; color: var(--text); min-width: 25px; text-align: center; }
-
-/* --- GESTIÓN DE SEMANAS --- */
-.week-manager { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: thin; }
-.week-btn { 
-    background: var(--card-soft); color: var(--text); border: 1px solid var(--border); 
-    padding: 8px 15px; border-radius: 12px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px;
-}
-.week-btn.active { background: var(--accent2); color: white; font-weight: bold; }
-.edit-week-name { background: transparent; border: none; color: inherit; font-weight: inherit; width: 80px; text-align: center; }
+.score-val { font-size: 18px; font-weight: bold; min-width: 20px; text-align: center; }
 
 /* --- TABS --- */
 .tabs{display:flex;gap:8px;margin-bottom:20px;justify-content: center; flex-wrap: wrap;}
@@ -51,25 +57,21 @@ header{text-align:center;margin-bottom:20px;}
 .tab.active{background:var(--accent2); color:white;}
 
 .day{display:none;}
-.day.active{display:block; animation: fadeIn 0.3s;}
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
+.day.active{display:block;}
 .day-card{ background:var(--card); padding:20px; border-radius:16px; border: 1px solid var(--border); margin-bottom:20px; }
-.block{ margin-bottom:15px; padding:15px; background:rgba(255,255,255,0.02); border-radius:12px; border: 1px solid var(--border); }
-.block h3{ margin-bottom:10px; color:var(--accent2); font-size: 12px; text-transform: uppercase; }
 
+.block{ margin-bottom:15px; padding:15px; background:rgba(255,255,255,0.02); border-radius:12px; border: 1px solid var(--border); }
 .task{ padding:8px; margin-bottom:5px; background:var(--card-soft); border-radius:8px; display:flex; align-items:center; gap:10px; }
 .task input{ background:transparent; border:none; color:white; font-size: 14px;}
 .task input[type="number"]{ width:40px; color:var(--accent1); font-weight:bold; text-align:center; }
 .task input[type="text"]{ flex:1; }
 
 .add-btn{ padding:6px 12px; border: 1px dashed var(--accent2); border-radius:8px; background:transparent; color:var(--accent2); cursor:pointer; font-size: 12px; }
-.del-btn{ color:var(--danger); background:none; border:none; cursor:pointer; font-weight:bold; padding:5px; }
+.del-btn{ color:var(--danger); background:none; border:none; cursor:pointer; font-weight:bold; }
 
-.checklist{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:15px; }
+.checklist{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:8px; margin-top:15px; }
 .player{ background:var(--card-soft); padding:8px; border-radius:8px; font-size:12px; display:flex; align-items:center; gap:8px; }
 
-/* MODAL */
 #goal-modal {
     display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
     background: var(--card); border: 2px solid var(--accent1); padding: 20px;
@@ -77,18 +79,18 @@ header{text-align:center;margin-bottom:20px;}
 }
 .goal-player-item { width: 100%; padding: 10px; margin-bottom: 5px; background: var(--card-soft); border: none; color: white; border-radius: 8px; text-align: left; }
 
-.btn-report { background: var(--accent3); color: black; padding: 10px 20px; border-radius: 10px; font-weight: bold; border: none; cursor: pointer; }
+.btn-report { background: var(--accent3); color: black; padding: 10px 20px; border-radius: 10px; font-weight: bold; border: none; cursor: pointer; font-size: 13px;}
 </style>
 </head>
 <body>
 
 <header>
-    <h1>⚽ CD Estudiantil</h1>
-    <p>Gestión de Entrenamiento y Partidos</p>
+    <h1 style="font-size: 22px;">⚽ CD Estudiantil</h1>
+    <p style="font-size: 13px; color: var(--sub);">DT: Jose Antonio Mazo</p>
 </header>
 
 <div class="config-row">
-    <button class="week-btn" onclick="addNewWeek()" style="border-color: var(--accent1);">+ Nueva Semana</button>
+    <button class="week-btn" onclick="addNewWeek()" style="border-color: var(--accent1); color: var(--accent1);">+ Nueva Semana</button>
     <button class="btn-report" onclick="exportMasterAttendance()">📊 Reporte General Excel</button>
 </div>
 
@@ -108,39 +110,35 @@ header{text-align:center;margin-bottom:20px;}
     <button class="btn-round" onclick="toggleTimer()" id="t-btn">▶</button>
     <button class="btn-round" onclick="resetTimer()">🔄</button>
     
-    <div style="width:1px; height:30px; background:var(--border);"></div>
+    <div style="width:1px; height:25px; background:var(--border);"></div>
 
     <div class="live-score-container">
         <div style="display:flex; flex-direction:column; align-items:center;">
-            <span style="font-size:9px; color:var(--accent1)">L</span>
-            <button class="btn-round" style="width:24px; height:24px; font-size:12px;" onclick="openGoalModal()">+</button>
+            <button class="btn-round" style="width:24px; height:24px; font-size:12px; background:var(--accent1); color:black;" onclick="openGoalModal()">+</button>
         </div>
-        
-        <span id="live-score-l" class="score-val">0</span>
-        <span style="color:var(--sub)">:</span>
-        <span id="live-score-v" class="score-val">0</span>
-
+        <span id="score-l" class="score-val">0</span>
+        <span>-</span>
+        <span id="score-v" class="score-val">0</span>
         <div style="display:flex; flex-direction:column; align-items:center;">
-            <span style="font-size:9px; color:var(--danger)">V</span>
-            <button class="btn-round" style="width:24px; height:24px; font-size:12px;" onclick="addAwayGoal()">+</button>
+            <button class="btn-round" style="width:24px; height:24px; font-size:12px; background:var(--danger);" onclick="addAwayGoal()">+</button>
         </div>
     </div>
 </div>
 
 <div id="goal-modal">
-    <h3 style="margin-bottom:15px; color:var(--accent1)">¿Quién marcó el gol local?</h3>
+    <h3 style="margin-bottom:15px; color:var(--accent1)">GOL LOCAL: Selecciona Jugador</h3>
     <div id="goal-players-list" style="max-height:300px; overflow-y:auto;"></div>
-    <button onclick="document.getElementById('goal-modal').style.display='none'" style="width:100%; margin-top:10px; padding:8px; background:var(--danger); border:none; color:white; border-radius:8px;">Cancelar</button>
+    <button onclick="document.getElementById('goal-modal').style.display='none'" style="width:100%; margin-top:10px; padding:10px; background:var(--danger); border:none; color:white; border-radius:8px; font-weight:bold;">CANCELAR</button>
 </div>
 
 <script>
 const playerList = ["Juan José Gálvez Rodríguez","Luis Angel Quintero Torres","Nicolás Cadena Molina","Tomás Ruiz Osorio","Juan José Ortiz","Nicolas Tamayo Olano","Roger Andrés","Jeronimo Blandón Bedoya","Juan Pablo Jaramillo Jaramillo","Miguel Ángel Ruiz Villegas","Isaac Manuel Ramírez Bolaño","Luis Said Andrade Hinestroza","Juan Miguel Ospina Villa","Alexis Posada Zabala","Dylan Esteban Tovar Montenegro","Emanuel Aristizabal","Matías Díaz David","Kevin Vanegas Cano"];
 
 let currentWeekId = 0;
-let weeks = JSON.parse(localStorage.getItem('estudiantil_v3')) || [
+let weeks = JSON.parse(localStorage.getItem('estudiantil_final_v4')) || [
     {
         name: "Semana 3",
-        lunes: { inicial:[], central:[], final:[], attend:{} },
+        lunes: { inicial:[{time:10,name:"Movilidad"}], central:[], final:[], attend:{} },
         martes: { inicial:[], central:[], final:[], attend:{} },
         jueves: { inicial:[], central:[], final:[], attend:{} },
         competencia: { rival:"Rival", goals:[], scoreL:0, scoreV:0, attend:{} }
@@ -155,13 +153,22 @@ function renderWeekBar() {
     weeks.forEach((w, i) => {
         let btn = document.createElement("div");
         btn.className = `week-btn ${i === currentWeekId ? 'active' : ''}`;
+        
+        // El input permite modificar el nombre directamente
         btn.innerHTML = `
-            <input class="edit-week-name" value="${w.name}" onchange="weeks[${i}].name=this.value; save();">
-            <span onclick="event.stopPropagation(); deleteWeek(${i})" style="color:var(--danger); font-weight:bold; padding-left:5px;">×</span>
+            <input type="text" class="edit-week-input" value="${w.name}" 
+                   onchange="renameWeek(${i}, this.value)" 
+                   onclick="event.stopPropagation(); this.focus();">
+            <span onclick="event.stopPropagation(); deleteWeek(${i})" style="color:var(--danger); font-size:16px; font-weight:bold;">×</span>
         `;
         btn.onclick = () => { currentWeekId = i; renderWeekBar(); renderActiveWeek(); updateFloatingScore(); };
         bar.appendChild(btn);
     });
+}
+
+function renameWeek(index, newName) {
+    weeks[index].name = newName;
+    save();
 }
 
 function addNewWeek() {
@@ -194,7 +201,7 @@ function renderActiveWeek() {
         container.innerHTML += `
         <div class="day ${day==='lunes'?'active':''}" id="${day}">
             <div class="day-card">
-                <h2 style="font-size:16px; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">${day.toUpperCase()}</h2>
+                <h2 style="font-size:16px; margin-bottom:15px; color:var(--accent2)">${day.toUpperCase()}</h2>
                 ${renderBlock(day, 'inicial', 'Parte Inicial')}
                 ${renderBlock(day, 'central', 'Parte Central')}
                 ${renderBlock(day, 'final', 'Parte Final')}
@@ -205,19 +212,16 @@ function renderActiveWeek() {
         generateChecklist(day);
     });
 
-    // Pestaña Competencia
     container.innerHTML += `
     <div class="day" id="competencia">
         <div class="day-card">
             <h2 style="color:var(--accent3); margin-bottom:15px;">🏆 PARTIDO</h2>
             <div class="block">
-                <label style="font-size:10px; color:var(--sub)">RIVAL</label>
-                <input type="text" class="task" style="width:100%; padding:10px;" value="${w.competencia.rival}" onchange="weeks[currentWeekId].competencia.rival=this.value; save()">
+                <input type="text" class="task" style="width:100%; padding:10px;" placeholder="Nombre del Rival..." value="${w.competencia.rival}" onchange="weeks[currentWeekId].competencia.rival=this.value; save()">
             </div>
             <div style="background:rgba(0,0,0,0.2); padding:15px; border-radius:12px; text-align:center; margin-bottom:15px;">
-                <div style="font-size:10px; color:var(--sub)">MARCADOR FINAL</div>
                 <div style="font-size:32px; font-weight:bold;">${w.competencia.scoreL} - ${w.competencia.scoreV}</div>
-                <div id="goals-log" style="margin-top:10px; font-size:13px; color:var(--accent1)">
+                <div style="margin-top:10px; font-size:13px; color:var(--accent1)">
                     ${w.competencia.goals.map(g => `<div>⚽ ${g.name} (${g.time}')</div>`).join('')}
                 </div>
             </div>
@@ -232,7 +236,7 @@ function renderBlock(day, type, title) {
     const data = weeks[currentWeekId][day][type];
     return `
     <div class="block">
-        <h3 style="color:var(--accent2); font-size:11px;">${title}</h3>
+        <h3 style="font-size:11px; margin-bottom:10px; color:var(--sub)">${title}</h3>
         ${data.map((t, i) => `
             <div class="task">
                 <input type="number" value="${t.time}" onchange="weeks[currentWeekId]['${day}']['${type}'][${i}].time=this.value; save()">
@@ -259,18 +263,15 @@ function generateChecklist(day) {
     });
 }
 
-/* FUNCIONES DE MARCADOR */
 function updateFloatingScore() {
     const w = weeks[currentWeekId];
-    document.getElementById("live-score-l").innerText = w.competencia.scoreL;
-    document.getElementById("live-score-v").innerText = w.competencia.scoreV;
+    document.getElementById("score-l").innerText = w.competencia.scoreL;
+    document.getElementById("score-v").innerText = w.competencia.scoreV;
 }
 
 function addAwayGoal() {
     weeks[currentWeekId].competencia.scoreV++;
-    save();
-    updateFloatingScore();
-    renderActiveWeek();
+    save(); updateFloatingScore(); renderActiveWeek();
 }
 
 function openGoalModal() {
@@ -295,7 +296,7 @@ function openGoalModal() {
 function exportMasterAttendance() {
     let csv = "\ufeffREPORTE GENERAL - CD ESTUDIANTIL\n";
     let header = "Jugador";
-    weeks.forEach(w => { header += `,${w.name} (Result.)`; });
+    weeks.forEach(w => { header += `,${w.name}`; });
     csv += header + ",TOTAL ASIST.\n";
 
     playerList.forEach((name, pIdx) => {
@@ -317,7 +318,6 @@ function exportMasterAttendance() {
     link.click();
 }
 
-/* RELOJ */
 function toggleTimer() {
     if(!timerRunning) {
         timerInterval = setInterval(() => {
@@ -339,7 +339,7 @@ function showDay(id, btn) {
     btn.classList.add('active');
 }
 
-function save() { localStorage.setItem('estudiantil_v3', JSON.stringify(weeks)); }
+function save() { localStorage.setItem('estudiantil_final_v4', JSON.stringify(weeks)); }
 
 renderWeekBar();
 renderActiveWeek();
