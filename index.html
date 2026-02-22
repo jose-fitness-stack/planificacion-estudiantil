@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro Coach Master - CD Estudiantil</title>
+
+<style>
+:root{
+--bg:#0f172a; --card:#1e293b; --card-soft:#273449; --text:#f1f5f9;
+--sub:#94a3b8; --accent1:#22c55e; --accent2:#3b82f6; --accent3:#f59e0b;
+--danger:#f43f5e; --border:#334155;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI', system-ui, sans-serif;}
+body{background:var(--bg);color:var(--text);padding:20px; padding-bottom: 120px;}
+
+header{text-align:center;margin-bottom:20px;}
+.config-row{display:flex; justify-content: center; gap:10px; margin-bottom: 20px;}
+
+/* --- PANEL DE CONTROL FLOTANTE --- */
+#control-panel {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--card); border: 2px solid var(--accent2);
+    padding: 12px 20px; border-radius: 50px; z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    display: flex; align-items: center; gap: 15px; width: max-content;
+}
+#timer-display { font-family: monospace; font-size: 20px; font-weight: bold; color: var(--accent2); }
+.btn-round { background: var(--card-soft); border: 1px solid var(--border); color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+
+/* --- GESTIÓN DE SEMANAS --- */
+.week-manager { display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: thin; }
+.week-btn { 
+    background: var(--card-soft); color: var(--text); border: 1px solid var(--border); 
+    padding: 8px 15px; border-radius: 12px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px;
+}
+.week-btn.active { background: var(--accent1); color: #000; font-weight: bold; }
+.edit-week-name { background: transparent; border: none; color: inherit; font-weight: inherit; width: 80px; text-align: center; }
+
+/* --- TABS --- */
+.tabs{display:flex;gap:8px;margin-bottom:20px;justify-content: center; flex-wrap: wrap;}
+.tab{ padding:10px 16px; border-radius:10px; border:none; cursor:pointer; background:var(--card-soft); color:var(--sub); font-weight: 600; font-size: 13px;}
+.tab.active{background:var(--accent2); color:white;}
+
+.day{display:none;}
+.day.active{display:block; animation: fadeIn 0.3s;}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.day-card{ background:var(--card); padding:20px; border-radius:16px; border:1px solid var(--border); margin-bottom:20px; }
+.block{ margin-bottom:15px; padding:15px; background:rgba(255,255,255,0.02); border-radius:12px; border: 1px solid var(--border); }
+.block h3{ margin-bottom:10px; color:var(--accent2); font-size: 12px; text-transform: uppercase; letter-spacing: 1px;}
+
+.task{ padding:8px; margin-bottom:5px; background:var(--card-soft); border-radius:8px; display:flex; align-items:center; gap:10px; }
+.task input{ background:transparent; border:none; color:white; font-size: 14px;}
+.task input[type="number"]{ width:40px; color:var(--accent1); font-weight:bold; text-align:center; }
+.task input[type="text"]{ flex:1; }
+
+.add-btn{ padding:6px 12px; border: 1px dashed var(--accent2); border-radius:8px; background:transparent; color:var(--accent2); cursor:pointer; font-size: 12px; margin-top:5px;}
+.del-btn{ color:var(--danger); background:none; border:none; cursor:pointer; font-weight:bold; padding:5px; }
+
+.checklist{ display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-top:15px; }
+.player{ background:var(--card-soft); padding:8px; border-radius:8px; font-size:12px; display:flex; align-items:center; gap:8px; }
+
+/* --- MODALES --- */
+#goal-modal {
+    display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: var(--card); border: 2px solid var(--accent1); padding: 20px;
+    border-radius: 15px; z-index: 2000; width: 85%; max-width: 350px;
+}
+.goal-player-item { width: 100%; padding: 10px; margin-bottom: 5px; background: var(--card-soft); border: none; color: white; border-radius: 8px; text-align: left; cursor: pointer; }
+
+.main-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+.btn-action { padding:15px; border:none; border-radius:12px; font-weight:bold; cursor:pointer; font-size: 12px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>⚽ CD Estudiantil</h1>
+    <p>Panel de Control de Entrenamiento Profesional</p>
+</header>
+
+<div class="config-row">
+    <button class="week-btn" onclick="addNewWeek()" style="border-style: dashed; border-color: var(--accent1);">+ Nueva Semana</button>
+    <button class="week-btn" onclick="exportMasterAttendance()" style="background: var(--accent3); color: black;">📊 Reporte General Excel</button>
+</div>
+
+<div class="week-manager" id="week-bar"></div>
+
+<div class="tabs">
+    <button class="tab active" onclick="showDay('lunes',this)">Lunes</button>
+    <button class="tab" onclick="showDay('martes',this)">Martes</button>
+    <button class="tab" onclick="showDay('jueves',this)">Jueves</button>
+    <button class="tab" style="border: 1px solid var(--accent3)" onclick="showDay('competencia',this)">🏆 Partido</button>
+</div>
+
+<div id="content"></div>
+
+<div id="control-panel">
+    <div id="timer-display">00:00</div>
+    <button class="btn-round" onclick="toggleTimer()" id="t-btn">▶</button>
+    <button class="btn-round" onclick="resetTimer()">🔄</button>
+    <div style="width:1px; height:25px; background:var(--border);"></div>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <button class="btn-round" onclick="openGoalModal()">⚽</button>
+        <span id="live-score" style="font-weight:bold; color:var(--accent3)">0 - 0</span>
+    </div>
+</div>
+
+<div id="goal-modal">
+    <h3 style="margin-bottom:15px; color:var(--accent1)">Registrar Gol Local</h3>
+    <div id="goal-players-list" style="max-height:300px; overflow-y:auto;"></div>
+    <button onclick="document.getElementById('goal-modal').style.display='none'" style="width:100%; margin-top:10px; padding:8px; background:var(--danger); border:none; color:white; border-radius:8px;">Cerrar</button>
+</div>
+
+<script>
+const playerList = ["Juan José Gálvez Rodríguez","Luis Angel Quintero Torres","Nicolás Cadena Molina","Tomás Ruiz Osorio","Juan José Ortiz","Nicolas Tamayo Olano","Roger Andrés","Jeronimo Blandón Bedoya","Juan Pablo Jaramillo Jaramillo","Miguel Ángel Ruiz Villegas","Isaac Manuel Ramírez Bolaño","Luis Said Andrade Hinestroza","Juan Miguel Ospina Villa","Alexis Posada Zabala","Dylan Esteban Tovar Montenegro","Emanuel Aristizabal","Matías Díaz David","Kevin Vanegas Cano"];
+
+// Carga inicial o datos por defecto
+let currentWeekId = 0;
+let weeks = JSON.parse(localStorage.getItem('estudiantil_data')) || [
+    {
+        name: "Semana 3",
+        lunes: { inicial:[{time:10,name:"Movilidad"}], central:[{time:30,name:"Rondos"}], final:[{time:15,name:"Intermitente"}], attend:{} },
+        martes: { inicial:[], central:[], final:[], attend:{} },
+        jueves: { inicial:[], central:[], final:[], attend:{} },
+        competencia: { rival:"Rival", goals:[], scoreL:0, scoreV:0, attend:{} }
+    }
+];
+
+let timerInterval, seconds = 0, timerRunning = false;
+
+function renderWeekBar() {
+    const bar = document.getElementById("week-bar");
+    bar.innerHTML = "";
+    weeks.forEach((w, i) => {
+        let btn = document.createElement("div");
+        btn.className = `week-btn ${i === currentWeekId ? 'active' : ''}`;
+        btn.innerHTML = `
+            <input class="edit-week-name" value="${w.name}" 
+                   onchange="weeks[${i}].name=this.value; save();" 
+                   onclick="event.stopPropagation()">
+            <span onclick="event.stopPropagation(); deleteWeek(${i})" style="color:var(--danger); font-weight:bold; margin-left:5px;">×</span>
+        `;
+        btn.onclick = () => { currentWeekId = i; renderWeekBar(); renderActiveWeek(); };
+        bar.appendChild(btn);
+    });
+}
+
+function addNewWeek() {
+    weeks.push({
+        name: "Nueva Semana",
+        lunes: { inicial:[], central:[], final:[], attend:{} },
+        martes: { inicial:[], central:[], final:[], attend:{} },
+        jueves: { inicial:[], central:[], final:[], attend:{} },
+        competencia: { rival:"", goals:[], scoreL:0, scoreV:0, attend:{} }
+    });
+    currentWeekId = weeks.length - 1;
+    save(); renderWeekBar(); renderActiveWeek();
+}
+
+function deleteWeek(i) {
+    if(weeks.length <= 1) return;
+    if(confirm("¿Eliminar esta semana y todos sus datos?")) {
+        weeks.splice(i, 1);
+        currentWeekId = 0;
+        save(); renderWeekBar(); renderActiveWeek();
+    }
+}
+
+function renderActiveWeek() {
+    const container = document.getElementById("content");
+    container.innerHTML = "";
+    const w = weeks[currentWeekId];
+
+    ["lunes","martes","jueves"].forEach(day => {
+        container.innerHTML += `
+        <div class="day ${day==='lunes'?'active':''}" id="${day}">
+            <div class="day-card">
+                <h2>Planificación: ${day.toUpperCase()}</h2>
+                ${renderBlock(day, 'inicial', 'Parte Inicial')}
+                ${renderBlock(day, 'central', 'Parte Central')}
+                ${renderBlock(day, 'final', 'Parte Final')}
+                <h3>Control de Asistencia</h3>
+                <div class="checklist" id="check-${day}"></div>
+            </div>
+        </div>`;
+        generateChecklist(day);
+    });
+
+    // Pestaña Competencia
+    container.innerHTML += `
+    <div class="day" id="competencia">
+        <div class="day-card">
+            <h2 style="color:var(--accent3)">INFORME DE PARTIDO</h2>
+            <div class="block">
+                <input type="text" class="task" style="width:100%; padding:10px;" placeholder="Nombre del Rival..." value="${w.competencia.rival}" onchange="weeks[currentWeekId].competencia.rival=this.value; save()">
+            </div>
+            <div id="goals-log" style="margin-bottom:15px; font-size:14px; color:var(--accent1)">
+                ${w.competencia.goals.map(g => `<div>⚽ ${g.name} (${g.time})</div>`).join('')}
+            </div>
+            <h3>Convocados</h3>
+            <div class="checklist" id="check-competencia"></div>
+        </div>
+    </div>`;
+    generateChecklist('competencia');
+    document.getElementById("live-score").innerText = `${w.competencia.scoreL} - ${w.competencia.scoreV}`;
+}
+
+function renderBlock(day, type, title) {
+    const data = weeks[currentWeekId][day][type];
+    return `
+    <div class="block">
+        <h3>${title}</h3>
+        ${data.map((t, i) => `
+            <div class="task">
+                <input type="number" value="${t.time}" onchange="weeks[currentWeekId]['${day}']['${type}'][${i}].time=this.value; save()">
+                <input type="text" value="${t.name}" onchange="weeks[currentWeekId]['${day}']['${type}'][${i}].name=this.value; save()">
+                <button class="del-btn" onclick="removeTask('${day}','${type}',${i})">×</button>
+            </div>
+        `).join('')}
+        <button class="add-btn" onclick="addTask('${day}','${type}')">+ Actividad</button>
+    </div>`;
+}
+
+function addTask(d,t){ weeks[currentWeekId][d][t].push({time:10,name:"Nueva actividad"}); save(); renderActiveWeek(); }
+function removeTask(d,t,i){ weeks[currentWeekId][d][t].splice(i,1); save(); renderActiveWeek(); }
+
+function generateChecklist(day) {
+    const cont = document.getElementById("check-"+day);
+    playerList.forEach((name, i) => {
+        let div = document.createElement("div");
+        div.className = "player";
+        let isChecked = weeks[currentWeekId][day].attend[i] ? "checked" : "";
+        div.innerHTML = `<input type="checkbox" ${isChecked} onchange="weeks[currentWeekId]['${day}'].attend[${i}]=this.checked; save();">
+                         <label>${name}</label>`;
+        cont.appendChild(div);
+    });
+}
+
+// EXPORTACIÓN MAESTRA DE EXCEL
+function exportMasterAttendance() {
+    let csv = "\ufeffREPORTE DE ASISTENCIA CD ESTUDIANTIL\n";
+    
+    // Encabezado dinámico: Jugador | Semana 1 - Lun | Semana 1 - Mar...
+    let header = "Jugador";
+    weeks.forEach(w => {
+        header += `,${w.name}-Lun,${w.name}-Mar,${w.name}-Jue,${w.name}-Part`;
+    });
+    csv += header + ",TOTAL ASISTENCIAS\n";
+
+    playerList.forEach((name, pIdx) => {
+        let row = `${name}`;
+        let totalPlayer = 0;
+        weeks.forEach(w => {
+            ['lunes','martes','jueves','competencia'].forEach(d => {
+                let attended = w[d].attend[pIdx] ? 1 : 0;
+                row += `,${attended ? 'SÍ' : 'NO'}`;
+                totalPlayer += attended;
+            });
+        });
+        csv += `${row},${totalPlayer}\n`;
+    });
+
+    let blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Reporte_General_Estudiantil.csv`;
+    link.click();
+}
+
+/* FUNCIONES DE TIEMPO Y GOLES */
+function toggleTimer() {
+    if(!timerRunning) {
+        timerInterval = setInterval(() => {
+            seconds++;
+            let m = Math.floor(seconds/60).toString().padStart(2,'0');
+            let s = (seconds%60).toString().padStart(2,'0');
+            document.getElementById("timer-display").innerText = `${m}:${s}`;
+        }, 1000);
+        document.getElementById("t-btn").innerText = "⏸";
+    } else { clearInterval(timerInterval); document.getElementById("t-btn").innerText = "▶"; }
+    timerRunning = !timerRunning;
+}
+function resetTimer() { clearInterval(timerInterval); seconds = 0; timerRunning = false; document.getElementById("timer-display").innerText = "00:00"; document.getElementById("t-btn").innerText = "▶"; }
+
+function openGoalModal() {
+    const list = document.getElementById("goal-players-list");
+    list.innerHTML = "";
+    playerList.forEach(p => {
+        let b = document.createElement("button");
+        b.className = "goal-player-item";
+        b.innerText = p;
+        b.onclick = () => {
+            let w = weeks[currentWeekId];
+            w.competencia.scoreL++;
+            w.competencia.goals.push({ name: p, time: document.getElementById("timer-display").innerText });
+            document.getElementById("live-score").innerText = `${w.competencia.scoreL} - ${w.competencia.scoreV}`;
+            document.getElementById("goal-modal").style.display = "none";
+            save(); renderActiveWeek();
+        };
+        list.appendChild(b);
+    });
+    document.getElementById("goal-modal").style.display = "block";
+}
+
+function showDay(id, btn) {
+    document.querySelectorAll('.day').forEach(d => d.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+}
+
+function save() { localStorage.setItem('estudiantil_data', JSON.stringify(weeks)); }
+
+// Inicio
+renderWeekBar();
+renderActiveWeek();
+</script>
+</body>
+</html>
